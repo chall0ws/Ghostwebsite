@@ -441,7 +441,7 @@
     gsap.registerPlugin(ScrollTrigger);
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    const FRAME_COUNT = 147;
+    const FRAME_COUNT = 118; // every frame of the source video at 24fps
     const framePath = i => `./assets/ezgif-frame-${String(i + 1).padStart(3, '0')}.jpg`;
     const canvas = document.getElementById('frames');
     const ctx = canvas.getContext('2d');
@@ -487,6 +487,7 @@
       const cw = canvas.width, ch = canvas.height;
       const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
       const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+      ctx.imageSmoothingQuality = 'high'; // default 'low' blurs/aliases when scaling; reset on every canvas resize
       ctx.fillStyle = '#050505';
       ctx.fillRect(0, 0, cw, ch);
       ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
