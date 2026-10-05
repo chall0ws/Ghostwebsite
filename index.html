@@ -3,11 +3,532 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ghost</title>
-  <link rel="stylesheet" href="style.css">
+  <title>Chronos Ultra</title>
+  <meta name="description" content="Chronos Ultra — aerospace titanium, sapphire crystal, 3nm intelligence.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050505;
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.6);
+      --dim: rgba(255, 255, 255, 0.38);
+      --border: rgba(255, 255, 255, 0.1);
+      --glass: rgba(255, 255, 255, 0.04);
+      --cyan: #00D6FF;
+      --blue: #0050FF;
+      --accent: linear-gradient(135deg, var(--cyan), var(--blue));
+      --gutter: clamp(1rem, 4vw, 3rem);
+      --max: 1200px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    body.loading { overflow: hidden; }
+    a { color: inherit; text-decoration: none; }
+
+    .gradient-text {
+      background: linear-gradient(180deg, #fff 30%, rgba(255, 255, 255, 0.55));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .accent-text {
+      background: var(--accent);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .eyebrow {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.6rem;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0, 150, 255, 0.35); }
+    .btn:focus-visible, a:focus-visible { outline: 2px solid var(--cyan); outline-offset: 3px; }
+
+    /* ---------- Preloader ---------- */
+    #preloader {
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      transition: opacity 0.8s ease, visibility 0.8s;
+    }
+    #preloader.hidden { opacity: 0; visibility: hidden; }
+    .loader-brand { font-size: clamp(1.25rem, 3vw, 1.75rem); font-weight: 300; letter-spacing: 0.4em; text-transform: uppercase; }
+    .loader-brand b { font-weight: 700; }
+    .loader-track { width: min(260px, 60vw); height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+    .loader-bar { height: 100%; width: 0; background: var(--accent); transition: width 0.2s ease; }
+    .loader-pct { font-size: 0.8rem; color: var(--dim); font-variant-numeric: tabular-nums; letter-spacing: 0.1em; }
+
+    /* ---------- Navbar ---------- */
+    .nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      border-bottom: 1px solid transparent;
+      transition: background 0.4s, border-color 0.4s, backdrop-filter 0.4s;
+    }
+    .nav.scrolled {
+      background: rgba(5, 5, 5, 0.6);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
+      border-bottom-color: var(--border);
+    }
+    .nav-inner {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 1rem var(--gutter);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .logo { font-weight: 300; letter-spacing: 0.3em; text-transform: uppercase; font-size: 0.95rem; }
+    .logo b { font-weight: 700; }
+    .nav-links { display: flex; gap: 2.25rem; list-style: none; font-size: 0.85rem; color: var(--muted); }
+    .nav-links a { transition: color 0.2s; }
+    .nav-links a:hover { color: #fff; }
+    .nav-cta {
+      padding: 0.5rem 1.2rem;
+      font-size: 0.8rem;
+      opacity: 0;
+      transform: translateY(-6px);
+      pointer-events: none;
+      transition: opacity 0.4s, transform 0.4s, box-shadow 0.25s;
+    }
+    .nav.scrolled .nav-cta { opacity: 1; transform: none; pointer-events: auto; }
+
+    /* ---------- Scrollytelling ---------- */
+    .scrolly { position: relative; height: 500vh; }
+    .sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100svh;
+      overflow: hidden;
+    }
+    #frames { display: block; width: 100%; height: 100%; }
+    .sticky::after {
+      /* vignette so cards read over the image */
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse at center, transparent 45%, rgba(5, 5, 5, 0.7) 100%),
+        linear-gradient(to bottom, transparent 75%, var(--bg));
+    }
+    .beat {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      height: fit-content;
+      margin-block: auto; /* centres without transform, which GSAP owns */
+      z-index: 2;
+      width: min(380px, 88vw);
+      padding: clamp(1.25rem, 2.5vw, 2rem);
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      opacity: 0;
+    }
+    .beat.left { left: var(--gutter); }
+    .beat.right { right: var(--gutter); }
+    .beat h2 { font-size: clamp(1.5rem, 3vw, 2.25rem); line-height: 1.15; font-weight: 700; letter-spacing: -0.02em; margin: 0.5rem 0 0.75rem; }
+    .beat p { color: var(--muted); font-size: 0.95rem; }
+    .beat .btn { margin-top: 1.25rem; }
+    .beat-1 h2 { font-size: clamp(2rem, 5vw, 3.5rem); }
+    .price { margin-top: 0.75rem; font-size: 0.85rem; color: var(--dim); }
+
+    /* ---------- Sections ---------- */
+    section.block { padding: clamp(5rem, 12vw, 9rem) var(--gutter); }
+    .container { max-width: var(--max); margin: 0 auto; }
+    .section-head { text-align: center; max-width: 680px; margin: 0 auto clamp(3rem, 6vw, 4.5rem); }
+    .section-head h2 { font-size: clamp(2rem, 5vw, 3.5rem); line-height: 1.1; font-weight: 700; letter-spacing: -0.03em; margin: 0.75rem 0 1rem; }
+    .section-head p { color: var(--muted); font-size: clamp(1rem, 1.5vw, 1.125rem); }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
+    .feature {
+      padding: 2.25rem 2rem;
+      border-radius: 20px;
+      background: var(--glass);
+      border: 1px solid var(--border);
+      transition: transform 0.4s ease, border-color 0.4s, box-shadow 0.4s;
+    }
+    .feature:hover {
+      transform: translateY(-8px);
+      border-color: rgba(0, 214, 255, 0.35);
+      box-shadow: 0 25px 50px rgba(0, 80, 255, 0.15);
+    }
+    .feature-icon {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      display: grid; place-items: center;
+      background: linear-gradient(135deg, rgba(0, 214, 255, 0.15), rgba(0, 80, 255, 0.15));
+      border: 1px solid rgba(0, 214, 255, 0.25);
+      margin-bottom: 1.5rem;
+    }
+    .feature-icon svg { width: 22px; height: 22px; stroke: var(--cyan); fill: none; stroke-width: 1.6; }
+    .feature h3 { font-size: 1.2rem; font-weight: 600; margin-bottom: 0.6rem; }
+    .feature p { color: var(--muted); font-size: 0.95rem; }
+
+    .metrics {
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(0, 80, 255, 0.05), transparent);
+      padding: clamp(3.5rem, 8vw, 5.5rem) var(--gutter);
+    }
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2rem; text-align: center; }
+    .metric-value { font-size: clamp(2.5rem, 5.5vw, 4rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+    .metric-value small { font-size: 0.45em; font-weight: 600; margin-left: 0.15em; }
+    .metric-label { margin-top: 0.75rem; color: var(--muted); font-size: 0.85rem; letter-spacing: 0.05em; }
+
+    .specs { display: grid; grid-template-columns: 1fr 1.4fr; gap: clamp(2.5rem, 6vw, 5rem); align-items: start; }
+    .specs-intro { position: sticky; top: 7rem; }
+    .specs-intro h2 { font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.1; font-weight: 700; letter-spacing: -0.03em; margin: 0.75rem 0 1rem; }
+    .specs-intro p { color: var(--muted); margin-bottom: 2rem; }
+    .spec-table { width: 100%; border-collapse: collapse; }
+    .spec-table tr { border-top: 1px solid var(--border); }
+    .spec-table tr:last-child { border-bottom: 1px solid var(--border); }
+    .spec-table th, .spec-table td { padding: 1.4rem 0; vertical-align: top; text-align: left; }
+    .spec-table th { width: 32%; font-weight: 600; font-size: 0.95rem; padding-right: 1.5rem; }
+    .spec-table td { color: var(--muted); font-size: 0.95rem; }
+
+    /* ---------- Footer ---------- */
+    footer { border-top: 1px solid var(--border); padding: clamp(3.5rem, 8vw, 5rem) var(--gutter) 2rem; }
+    .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 2.5rem; }
+    .footer-brand p { color: var(--dim); font-size: 0.9rem; max-width: 300px; margin-top: 1rem; }
+    .footer-col h4 { font-size: 0.75rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--dim); font-weight: 600; margin-bottom: 1.1rem; }
+    .footer-col ul { list-style: none; display: grid; gap: 0.7rem; }
+    .footer-col a { color: var(--muted); font-size: 0.9rem; transition: color 0.2s; }
+    .footer-col a:hover { color: #fff; }
+    .footer-bottom {
+      margin-top: 4rem;
+      padding-top: 1.75rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      color: var(--dim);
+      font-size: 0.8rem;
+    }
+    .legal { display: flex; gap: 1.5rem; flex-wrap: wrap; }
+    .legal a:hover { color: #fff; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1024px) {
+      .features { grid-template-columns: repeat(2, 1fr); }
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); row-gap: 3rem; }
+      .specs { grid-template-columns: 1fr; }
+      .specs-intro { position: static; }
+      .footer-grid { grid-template-columns: repeat(3, 1fr); }
+      .footer-brand { grid-column: 1 / -1; }
+    }
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-cta { padding: 0.45rem 1rem; }
+      /* cards dock to the bottom so the watch stays visible */
+      .beat, .beat.left, .beat.right {
+        left: 0;
+        right: 0;
+        margin-inline: auto;
+        top: auto;
+        bottom: 6vh;
+      }
+      .features { grid-template-columns: 1fr; }
+      .spec-table th { width: 38%; }
+    }
+    @media (max-width: 480px) {
+      .metrics-grid { grid-template-columns: 1fr 1fr; gap: 2.5rem 1rem; }
+      .footer-grid { grid-template-columns: 1fr 1fr; }
+      .spec-table th, .spec-table td { display: block; width: 100%; padding: 0; }
+      .spec-table th { padding-top: 1.2rem; margin-bottom: 0.25rem; }
+      .spec-table td { padding-bottom: 1.2rem; }
+      .footer-bottom { flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .feature, .btn { transition: none; }
+    }
+  </style>
 </head>
-<body>
-  <h1>Ghost</h1>
-  <img src="Assets/ezgif-frame-001.jpg" alt="">
+<body class="loading">
+
+  <!-- 1. Preloader -->
+  <div id="preloader" role="status" aria-live="polite">
+    <div class="loader-brand">Chronos <b>Ultra</b></div>
+    <div class="loader-track"><div class="loader-bar" id="loaderBar"></div></div>
+    <div class="loader-pct" id="loaderPct">0%</div>
+  </div>
+
+  <!-- 2. Navbar -->
+  <header class="nav" id="nav">
+    <div class="nav-inner">
+      <a href="#top" class="logo">Chronos <b>Ultra</b></a>
+      <ul class="nav-links">
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#craft">Craftsmanship</a></li>
+        <li><a href="#performance">Performance</a></li>
+        <li><a href="#specs">Specs</a></li>
+      </ul>
+      <a href="#preorder" class="btn nav-cta">Pre-order</a>
+    </div>
+  </header>
+
+  <main id="top">
+    <!-- 3 + 4. Scrollytelling -->
+    <section class="scrolly" id="overview">
+      <div class="sticky">
+        <canvas id="frames" aria-label="Chronos Ultra disassembling into its components"></canvas>
+
+        <article class="beat beat-1 left">
+          <span class="eyebrow">Overview</span>
+          <h2 class="gradient-text">Chronos Ultra.</h2>
+          <p>Time, re-engineered. A skeletonised masterpiece forged for those who measure life in moments.</p>
+        </article>
+
+        <article class="beat beat-2 right">
+          <span class="eyebrow">Architecture</span>
+          <h2 class="gradient-text">Every layer, laid bare.</h2>
+          <p>Over 200 precision components — bezel, dial, movement and caseback — machined to tolerances of two microns.</p>
+        </article>
+
+        <article class="beat beat-3 left">
+          <span class="eyebrow">Intelligence</span>
+          <h2 class="gradient-text">A 3nm mind beneath the dial.</h2>
+          <p>The C1 neural core learns your rhythm, tracking health, sleep and recovery with on-device privacy.</p>
+        </article>
+
+        <article class="beat beat-4 right">
+          <span class="eyebrow">Interaction</span>
+          <h2 class="gradient-text">Feel every turn.</h2>
+          <p>The haptic crown delivers detents you can feel — a mechanical sensation, rendered digitally.</p>
+        </article>
+
+        <article class="beat beat-5 left" id="preorder">
+          <span class="eyebrow">Pre-order</span>
+          <h2 class="gradient-text">Own the moment.</h2>
+          <p>Limited first edition. Shipping this winter.</p>
+          <a href="#specs" class="btn">Pre-order now</a>
+          <div class="price">From $1,299</div>
+        </article>
+      </div>
+    </section>
+
+    <!-- 5. Craftsmanship -->
+    <section class="block" id="craft">
+      <div class="container">
+        <div class="section-head">
+          <span class="eyebrow">Craftsmanship</span>
+          <h2 class="gradient-text">Built from materials that outlast you.</h2>
+          <p>Every surface is chosen for permanence, then finished by hand.</p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><path d="M12 2l8.5 5v10L12 22l-8.5-5V7z"/><path d="M12 22V12M20.5 7L12 12 3.5 7"/></svg></div>
+            <h3>Aerospace-grade titanium</h3>
+            <p>Grade 5 titanium case, 40% lighter than steel and twice as strong, with a micro-blasted satin finish.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3l3 9-3 9-3-9z"/></svg></div>
+            <h3>Sapphire crystal</h3>
+            <p>Domed sapphire rated 9 on the Mohs scale, with seven layers of anti-reflective coating.</p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg></div>
+            <h3>Tactile haptic crown</h3>
+            <p>A knurled crown with a linear actuator that delivers crisp, programmable detents with every rotation.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Performance metrics -->
+    <section class="metrics" id="performance" aria-label="Performance metrics">
+      <div class="container metrics-grid">
+        <div><div class="metric-value accent-text">3,000<small>nits</small></div><div class="metric-label">Peak brightness</div></div>
+        <div><div class="metric-value accent-text">100<small>m</small></div><div class="metric-label">Water resistance</div></div>
+        <div><div class="metric-value accent-text">72<small>h</small></div><div class="metric-label">Battery life</div></div>
+        <div><div class="metric-value accent-text">3<small>nm</small></div><div class="metric-label">Processor architecture</div></div>
+      </div>
+    </section>
+
+    <!-- 7. Specs -->
+    <section class="block" id="specs">
+      <div class="container specs">
+        <div class="specs-intro">
+          <span class="eyebrow">Hardware</span>
+          <h2 class="gradient-text">Technical specifications.</h2>
+          <p>Engineering without compromise. Every figure below was earned in the lab, then proven in the field.</p>
+          <a href="#preorder" class="btn">Pre-order Chronos Ultra</a>
+        </div>
+        <table class="spec-table">
+          <tbody>
+            <tr><th scope="row">Display</th><td>1.96" LTPO3 OLED, 502×410 px, always-on, up to 3,000 nits</td></tr>
+            <tr><th scope="row">Dimensions</th><td>46 × 46 × 12.4 mm, 61 g (case only)</td></tr>
+            <tr><th scope="row">Build</th><td>Grade 5 titanium case, domed sapphire crystal, ceramic caseback, FKM rubber strap</td></tr>
+            <tr><th scope="row">Processor</th><td>C1 3nm SiP, 6-core CPU, 4-core neural engine</td></tr>
+            <tr><th scope="row">Sensors</th><td>ECG, optical heart rate, SpO₂, skin temperature, barometric altimeter, dual-frequency GPS</td></tr>
+            <tr><th scope="row">Battery</th><td>Up to 72 hours, 7 days in low-power mode, 0–80% in 45 minutes</td></tr>
+            <tr><th scope="row">Connectivity</th><td>LTE, Wi-Fi 6E, Bluetooth 5.4, UWB, NFC</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- 8. Footer -->
+  <footer>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#top" class="logo">Chronos <b>Ultra</b></a>
+          <p>Engineered in Geneva. Crafted for a lifetime. Where horology meets intelligence.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Explore</h4>
+          <ul><li><a href="#overview">Overview</a></li><li><a href="#craft">Craftsmanship</a></li><li><a href="#specs">Specifications</a></li></ul>
+        </div>
+        <div class="footer-col">
+          <h4>Support</h4>
+          <ul><li><a href="#">Warranty</a></li><li><a href="#">Servicing</a></li><li><a href="#">Contact</a></li></ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul><li><a href="#">About</a></li><li><a href="#">Careers</a></li><li><a href="#">Press</a></li></ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span id="year">2026</span> Chronos Horology SA. All rights reserved.</span>
+        <div class="legal"><a href="#">Privacy</a><a href="#">Terms</a><a href="#">Cookies</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  <script>
+    gsap.registerPlugin(ScrollTrigger);
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    const FRAME_COUNT = 147;
+    const framePath = i => `./assets/ezgif-frame-${String(i + 1).padStart(3, '0')}.jpg`;
+    const canvas = document.getElementById('frames');
+    const ctx = canvas.getContext('2d');
+    const images = [];
+    const state = { frame: 0 };
+
+    // ---------- Preloader ----------
+    const bar = document.getElementById('loaderBar');
+    const pct = document.getElementById('loaderPct');
+    let loaded = 0;
+
+    for (let i = 0; i < FRAME_COUNT; i++) {
+      const img = new Image();
+      img.onload = img.onerror = onFrameLoaded; // a missing frame shouldn't hang the loader
+      img.src = framePath(i);
+      images.push(img);
+    }
+
+    function onFrameLoaded() {
+      loaded++;
+      const p = Math.round((loaded / FRAME_COUNT) * 100);
+      bar.style.width = p + '%';
+      pct.textContent = p + '%';
+      if (loaded === FRAME_COUNT) {
+        document.getElementById('preloader').classList.add('hidden');
+        document.body.classList.remove('loading');
+        resize();
+        initScrolly();
+      }
+    }
+
+    // ---------- Canvas rendering (object-fit: cover on high-DPI) ----------
+    function resize() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = canvas.clientWidth * dpr;
+      canvas.height = canvas.clientHeight * dpr;
+      render();
+    }
+
+    function render() {
+      const img = images[Math.round(state.frame)];
+      if (!img || !img.naturalWidth) return;
+      const cw = canvas.width, ch = canvas.height;
+      const scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
+      const w = img.naturalWidth * scale, h = img.naturalHeight * scale;
+      ctx.fillStyle = '#050505';
+      ctx.fillRect(0, 0, cw, ch);
+      ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    }
+
+    window.addEventListener('resize', resize);
+
+    // ---------- Scrollytelling master timeline ----------
+    function initScrolly() {
+      const hidden = { opacity: 0, y: 40 };
+      const shown = { opacity: 1, y: 0, duration: 0.05, ease: 'power2.out' };
+      const out = { opacity: 0, y: -40, duration: 0.05, ease: 'power2.in' };
+      gsap.set('.beat', hidden);
+
+      const tl = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: '.scrolly',
+          start: 'top top',
+          end: 'bottom bottom',
+          scrub: 0.5,
+        },
+      });
+
+      // timeline runs 0 → 1, mirroring scroll progress through the 500vh section
+      tl.to(state, { frame: FRAME_COUNT - 1, duration: 1, snap: 'frame', onUpdate: render }, 0);
+
+      // [fade-in start, fade-out start]; beat 5 stays on screen
+      const windows = [[0, 0.16], [0.2, 0.36], [0.4, 0.56], [0.6, 0.76], [0.8, null]];
+      windows.forEach(([inAt, outAt], i) => {
+        const el = `.beat-${i + 1}`;
+        if (i === 0) tl.set(el, { opacity: 1, y: 0 }, 0); // visible on arrival
+        else tl.to(el, shown, inAt);
+        if (outAt !== null) tl.to(el, out, outAt);
+      });
+    }
+
+    // ---------- Navbar ----------
+    const nav = document.getElementById('nav');
+    const onScroll = () => nav.classList.toggle('scrolled', window.scrollY > 40);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  </script>
 </body>
 </html>
